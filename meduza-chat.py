@@ -1,6 +1,6 @@
 import websocket
 import json
-from time import sleep
+import time
 
 class increaser():
      def __init__(self):
@@ -52,7 +52,8 @@ def get_topic(topic_addr):
 # Этот список периодический отправляется сервером, и нам не нужен
 def safe_recv(data):
 	while True:
-		if json.loads(data)['topic'] == 'topic:lobby':
+		data = json.loads(data)
+		if data['topic'] == 'topic:lobby':
 			data = ws.recv()
 		else:
 			return data
@@ -62,14 +63,14 @@ ws = websocket.WebSocket()
 ws.connect(wss_addr)
 
 topic_addr = get_topic_addr()
-
-result = get_topic(topic_addr)
-r = json.loads(result)
+heart_time = time.time()
+r = get_topic(topic_addr)
+response = r['payload']['response']
 
 while True:
-	messages = r['payload']['response']['messages']
-	users = r['payload']['response']['users']
-	ids = r['payload']['response']['messages_ids']
+	messages = response['messages']
+	users = response['users']
+	ids = response['messages_ids']
 	for i in ids:
 		message = messages[i]
 		writer_name = users[message['user_id']]['name']
@@ -83,17 +84,27 @@ while True:
 			message_remove,
 			writer_text,
 			))
-	ws.close()
-	exit()
-	
+
 	while True:
-		sleep(5)
 		try:
-			result = get_topic(topic_addr)
-			if result:
-				print(result)
+			time.sleep(2)
+			if (time.time() - heart_time) > 25:
+				heart_time = time.time()
+				data = {
+					"topic":"phoenix",
+					"event":"heartbeat",
+					"payload":{},
+					"ref":"{}".format(ref())
+					}
+				data = json.dumps(data)
+				ws.send(data)
+			r = json.loads(ws.recv())
+			if r != '' and r['event'] == 'new_msg':
+				response = r['payload']['messages'][r['payload']['messages_ids'][0]]
 				break
+			else:
+				continue
 		except:
 			ws.close()
-			print('Соединение разорвано')
+			print('\rСоединение разорвано')
 			exit()
