@@ -16,8 +16,12 @@ def get_topic_addr():
 		if messages_count == 0: continue
 		title = chat['title']
 		print('{:<4} {}  ({})'.format(i + ')', title, messages_count))
-	chats_id = input('> Введите номер чата: ')
-	return r['payload']['chats'][chats_id]['key']
+	while True:
+		chats_id = input('> Введите номер чата: ')
+		try:
+			return r['payload']['chats'][chats_id]['key']
+		except:
+			print('Вы ввели недопустимый номер')
 
 
 def get_topic(topic_addr):
@@ -29,7 +33,13 @@ def get_topic(topic_addr):
 		}
 	data = json.dumps(data)
 	ws.send(data)
-	return ws.recv()
+	return safe_recv(ws.recv())
+
+def safe_recv(data):
+	if json.loads(data)['topic'] == 'topic:lobby':
+		return ws.recv()
+	else:
+		return data
 
 wss_addr = 'wss://meduza.io/pond/socket/websocket?token=no_token&vsn=1.0.0'
 ws = websocket.WebSocket()
@@ -38,9 +48,9 @@ ws.connect(wss_addr)
 topic_addr = get_topic_addr()
 
 result = get_topic(topic_addr)
+r = json.loads(result)
 
 while True:
-	r = json.loads(result)
 	messages = r['payload']['response']['messages']
 	users = r['payload']['response']['users']
 	ids = r['payload']['response']['messages_ids']
@@ -49,9 +59,17 @@ while True:
 		writer_name = users[message['user_id']]['name']
 		writer_text = message['message']
 		print('{:<20} {}'.format(writer_name + ':', writer_text))
+	ws.close()
+	exit()
+	
 	while True:
 		sleep(5)
-		result = ws.recv()
-		if not result: break
-
-ws.close()
+		try:
+			result = get_topic(topic_addr)
+			if result:
+				print(result)
+				break
+		except:
+			ws.close()
+			print('Соединение разорвано')
+			exit()
