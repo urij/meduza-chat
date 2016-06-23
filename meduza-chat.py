@@ -100,7 +100,7 @@ while True:
 				ws.send(data)
 			r = json.loads(ws.recv())
 			if r != '' and r['event'] == 'new_msg':
-				response = r['payload']['messages'][r['payload']['messages_ids'][0]]
+				response = r['payload']
 				break
 			else:
 				continue
