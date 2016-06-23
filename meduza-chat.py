@@ -48,11 +48,14 @@ def get_topic(topic_addr):
 	ws.send(data)
 	return safe_recv(ws.recv())
 
+# Функция, игнорирующая данные со списком чатов
+# Этот список периодический отправляется сервером, и нам не нужен
 def safe_recv(data):
-	if json.loads(data)['topic'] == 'topic:lobby':
-		return ws.recv()
-	else:
-		return data
+	while True:
+		if json.loads(data)['topic'] == 'topic:lobby':
+			data = ws.recv()
+		else:
+			return data
 
 wss_addr = 'wss://meduza.io/pond/socket/websocket?token=no_token&vsn=1.0.0'
 ws = websocket.WebSocket()
@@ -71,7 +74,15 @@ while True:
 		message = messages[i]
 		writer_name = users[message['user_id']]['name']
 		writer_text = message['message']
-		print('{:<20} {}'.format(writer_name + ':', writer_text))
+		if message['status']:
+			message_remove = '[УДАЛЕНО]'
+		else:
+			message_remove = ''
+		print('{:<20}{} {}'.format(
+			writer_name + ':',
+			message_remove,
+			writer_text,
+			))
 	ws.close()
 	exit()
 	
