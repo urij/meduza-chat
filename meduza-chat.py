@@ -2,8 +2,21 @@ import websocket
 import json
 from time import sleep
 
+class increaser():
+     def __init__(self):
+         self.i = 1
+     def __call__(self):
+         self.i += 1
+         return self.i
+ref = increaser()
+
 def get_topic_addr():
-	data = {"topic":"topic:lobby","event":"phx_join","payload":{},"ref":"1"}
+	data = {
+		"topic":"topic:lobby",
+		"event":"phx_join",
+		"payload":{},
+		"ref":"{}".format(ref())
+		}
 	data = json.dumps(data)
 	ws.send(data)
 	ws.recv()
@@ -29,7 +42,7 @@ def get_topic(topic_addr):
 		"topic":"topic:{}".format(topic_addr),
 		"event":"phx_join",
 		"payload":{},
-		"ref":"2"
+		"ref":"{}".format(ref())
 		}
 	data = json.dumps(data)
 	ws.send(data)
