@@ -10,6 +10,12 @@ class increaser():
          return self.i
 ref = increaser()
 
+def time_convert(unix_time):
+	localtime = time.localtime(unix_time)
+	h = localtime.tm_hour
+	m = localtime.tm_min
+	return '{:0>2}:{:0>2}'.format(h, m)
+
 def get_topic_addr():
 	data = {
 		"topic":"topic:lobby",
@@ -78,10 +84,11 @@ while True:
 		if message['status']:
 			message_remove = '[УДАЛЕНО]'
 		else:
-			message_remove = ''
-		print('{:<20}{} {}'.format(
-			writer_name + ':',
+			message_remove = '[{}]'.format(
+				time_convert(message['inserted_at']))
+		print('{:<9}{:<20}: {}'.format(
 			message_remove,
+			writer_name,
 			writer_text,
 			))
 
