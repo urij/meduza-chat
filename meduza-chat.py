@@ -1,6 +1,40 @@
-import websocket
 import json
 import time
+
+try:
+	import websocket
+except:
+	print('''
+	Для работы приложения необходима библиотека websocket-client.
+	Установить её можно с помощью pip.
+	''')
+	exit()
+
+try:
+	import colorama
+	colors = {
+		'GREEN'		: colorama.Fore.GREEN,
+		'GRAY'		: colorama.Fore.LIGHTBLACK_EX,
+		'PURPLE'	: colorama.Fore.MAGENTA,
+		'RED'		: colorama.Fore.LIGHTRED_EX,
+		'BOLD'		: colorama.Style.BRIGHT,
+		'RESETCL'	: colorama.Fore.RESET,
+		'RESETAL'	: colorama.Style.RESET_ALL,
+	}
+except:
+	print('''
+	Цветной вывод отключён. Необходима библиотека colorama.
+	Установить её можно с помощью pip.
+	''')
+	colors = {
+		'GREEN'		: '',
+		'GRAY'		: '',
+		'PURPLE'	: '',
+		'RED'		: '',
+		'BOLD'		: '',
+		'RESETCL'	: '',
+		'RESETAL'	: '',
+	}
 
 class increaser():
      def __init__(self):
@@ -29,12 +63,17 @@ def get_topic_addr():
 	result = ws.recv()
 	r = json.loads(result)
 	chats_ids = r['payload']['chats_ids']
-	for i in chats_ids:
-		chat = r['payload']['chats'][i]
+	for chat_id in chats_ids:
+		chat = r['payload']['chats'][chat_id]
 		messages_count = chat['messages_count']
 		if messages_count == 0: continue
 		title = chat['title']
-		print('{:<4} {}  ({})'.format(i + ')', title, messages_count))
+		print('{:<4} {}  {GRAY}({}){RESETCL}'.format(
+			chat_id + ')',
+			title,
+			messages_count,
+			**colors,
+			))
 	while True:
 		chats_id = input('> Введите номер чата: ')
 		try:
@@ -83,14 +122,15 @@ while True:
 		writer_name = users[message['user_id']]['name']
 		writer_text = message['message']
 		if message['status']:
-			message_remove = '[УДАЛЕНО]'
+			message_time = '[УДАЛЕНО]'
 		else:
-			message_remove = '[{}]'.format(
+			message_time = '[{}]'.format(
 				time_convert(message['inserted_at']))
-		print('{:<9}{:<20}: {}'.format(
-			message_remove,
+		print('{GREEN}{BOLD}{:<9}{RESETCL}{:<20}{RESETAL}: {}'.format(
+			message_time,
 			writer_name,
 			writer_text,
+			**colors,
 			))
 
 	while True:

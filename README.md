@@ -18,6 +18,8 @@
 pip3 install websocket-client
 ```
 
+Для работы цветного (красивого) вывода необходима библиотека colorama.
+
 Запустить приложение через консоль:
 ```
 python3 meduza-chat.py
