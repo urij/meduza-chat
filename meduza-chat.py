@@ -72,6 +72,7 @@ topic_addr = get_topic_addr()
 heart_time = time.time()
 r = get_topic(topic_addr)
 response = r['payload']['response']
+print('—'*30)
 
 while True:
 	messages = response['messages']
