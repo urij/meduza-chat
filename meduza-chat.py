@@ -72,7 +72,7 @@ def get_topic_addr():
 			chat_id + ')',
 			title,
 			messages_count,
-			**colors,
+			**colors
 			))
 	while True:
 		chats_id = input('> Введите номер чата: ')
@@ -130,7 +130,7 @@ while True:
 			message_time,
 			writer_name,
 			writer_text,
-			**colors,
+			**colors
 			))
 
 	while True:
