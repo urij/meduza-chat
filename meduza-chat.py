@@ -103,6 +103,29 @@ def safe_recv(data):
 		else:
 			return data
 
+# Функция, принимающая объект с сообщением и данными пользователей
+# возвращающая отформатированный текст сообщения
+def message_format(message, users):
+	writer_id = message['user_id']
+	writer_name = users[writer_id]['name']
+	writer_text	= message['message']
+	writer_is_admin = users[writer_id]['admin'] or writer_name == 'Meduza Bot'
+	if message['status']:
+		writer_time = '[УДАЛЕНО]'
+	else:
+		writer_time = '[{}]'.format(
+			time_convert(message['inserted_at']))
+	return '{GREEN}{BOLD}{time:<9}{RESETCL}{adm_l}{name:<20}{adm_r}{RESETAL}: {text}'.format(
+		**{
+			'name': writer_name,
+			'time': writer_time,
+			'text': writer_text,
+			'adm_l': (writer_is_admin and colors['RED']) or '',
+			'adm_r': (writer_is_admin and colors['RESETCL']) or '',
+		},
+		**colors
+		)
+
 wss_addr = 'wss://meduza.io/pond/socket/websocket?token=no_token&vsn=1.0.0'
 ws = websocket.WebSocket()
 ws.connect(wss_addr)
@@ -119,19 +142,7 @@ while True:
 	ids = response['messages_ids']
 	for i in ids:
 		message = messages[i]
-		writer_name = users[message['user_id']]['name']
-		writer_text = message['message']
-		if message['status']:
-			message_time = '[УДАЛЕНО]'
-		else:
-			message_time = '[{}]'.format(
-				time_convert(message['inserted_at']))
-		print('{GREEN}{BOLD}{:<9}{RESETCL}{:<20}{RESETAL}: {}'.format(
-			message_time,
-			writer_name,
-			writer_text,
-			**colors
-			))
+		print(message_format(message, users))
 
 	while True:
 		try:
