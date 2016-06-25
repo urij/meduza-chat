@@ -93,8 +93,7 @@ def get_topic(topic_addr):
 	ws.send(data)
 	return safe_recv(ws.recv())
 
-# Функция, игнорирующая данные со списком чатов
-# Этот список периодический отправляется сервером, и нам не нужен
+# Функция, игнорирующая данные со списком чатов (topic lobby)
 def safe_recv(data):
 	while True:
 		data = json.loads(data)
@@ -126,44 +125,87 @@ def message_format(message, users):
 		**colors
 		)
 
+# Посылает команду о закрытии и прекращении отслеживания чата
+# По умолчанию закрывает список чатов (topic lobby)
+def topic_close(topic_addr = 'lobby'):
+	data = {
+		"topic":"topic:{}".format(topic_addr),
+		"event":"close",
+		"payload":{"reason":"close"},
+		"ref":"{}".format(ref())
+		}
+	data = json.dumps(data)
+	ws.send(data)
+	ws.recv()
+	data = {
+		"topic":"topic:{}".format(topic_addr),
+		"event":"phx_leave",
+		"payload":{},
+		"ref":"{}".format(ref())
+		}
+	data = json.dumps(data)
+	ws.send(data)
+	ws.recv()
+	ws.recv()
+
+# Процедура принимает адрес чата, выводит последние сообщения
+# и переходит в режим ожидания новых сообщений (мониторинга)
+def topic_monitoring(topic_addr):
+	heart_time = time.time()
+	r = get_topic(topic_addr)
+	response = r['payload']['response']
+	is_monitoring = True
+
+	while is_monitoring:
+		messages = response['messages']
+		users = response['users']
+		ids = response['messages_ids']
+		for i in ids:
+			message = messages[i]
+			print(message_format(message, users))
+
+		while True:
+			try:
+				time.sleep(2)
+				if (time.time() - heart_time) > 25:
+					heart_time = time.time()
+					data = {
+						"topic":"phoenix",
+						"event":"heartbeat",
+						"payload":{},
+						"ref":"{}".format(ref())
+						}
+					data = json.dumps(data)
+					ws.send(data)
+				r = json.loads(ws.recv())
+				if r != '' and r['event'] == 'new_msg':
+					response = r['payload']
+					break
+				else:
+					continue
+			except KeyboardInterrupt:
+				is_monitoring = False
+				break
+			except websocket._exceptions.WebSocketTimeoutException:
+				continue
+			except:
+				raise
+
 wss_addr = 'wss://meduza.io/pond/socket/websocket?token=no_token&vsn=1.0.0'
 ws = websocket.WebSocket()
+ws.settimeout(5.0)
 ws.connect(wss_addr)
-
-topic_addr = get_topic_addr()
-heart_time = time.time()
-r = get_topic(topic_addr)
-response = r['payload']['response']
-print('—'*30)
-
-while True:
-	messages = response['messages']
-	users = response['users']
-	ids = response['messages_ids']
-	for i in ids:
-		message = messages[i]
-		print(message_format(message, users))
-
+try:
 	while True:
-		try:
-			time.sleep(2)
-			if (time.time() - heart_time) > 25:
-				heart_time = time.time()
-				data = {
-					"topic":"phoenix",
-					"event":"heartbeat",
-					"payload":{},
-					"ref":"{}".format(ref())
-					}
-				data = json.dumps(data)
-				ws.send(data)
-			r = json.loads(ws.recv())
-			if r != '' and r['event'] == 'new_msg':
-				response = r['payload']
-				break
-			else:
-				continue
-		except:
-			ws.close()
-			print('\rСоединение разорвано')
-			exit()
+		topic_addr = get_topic_addr()
+		topic_close()
+		print('\r' + '—'*30)
+		topic_monitoring(topic_addr)
+		print('\r' + '—'*30)
+		topic_close(topic_addr)
+except KeyboardInterrupt:
+	ws.close()
+	print('\rСоединение разорвано')
+	exit()
+except:
+	raise
