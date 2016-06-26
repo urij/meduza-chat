@@ -1,3 +1,4 @@
+from sys import argv
 import json
 import time
 
@@ -108,7 +109,8 @@ def message_format(message, users):
 	writer_id = message['user_id']
 	writer_name = users[writer_id]['name']
 	writer_text	= message['message']
-	writer_is_admin = users[writer_id]['admin'] or writer_name == 'Meduza Bot'
+	# id 60081 — Meduza Bot
+	writer_is_admin = users[writer_id]['admin'] or writer_id == '60081'
 	if message['status']:
 		writer_time = '[УДАЛЕНО]'
 	else:
@@ -124,6 +126,11 @@ def message_format(message, users):
 		},
 		**colors
 		)
+# Разорвать соединение с сервером, вывести сообщение и выйти из приложения
+def close_app():
+	ws.close()
+	print('\rСоединение разорвано')
+	exit()
 
 # Посылает команду о закрытии и прекращении отслеживания чата
 # По умолчанию закрывает список чатов (topic lobby)
@@ -154,8 +161,18 @@ def topic_monitoring(topic_addr):
 	heart_time = time.time()
 	r = get_topic(topic_addr)
 	response = r['payload']['response']
-	is_monitoring = True
+	chat_id = response['chats_ids'][0]
+	chat_title = response['chats'][chat_id]['title']
+	chat_second_title = response['chats'][chat_id]['second_title']
 
+	print('Чат #{}: {}\n{GRAY}{}{RESETCL}'.format(
+		chat_id,
+		chat_title,
+		chat_second_title,
+		**colors
+		))
+
+	is_monitoring = True
 	while is_monitoring:
 		messages = response['messages']
 		users = response['users']
@@ -163,6 +180,10 @@ def topic_monitoring(topic_addr):
 		for i in ids:
 			message = messages[i]
 			print(message_format(message, users))
+		chat_active = response['chats'][chat_id]['active']
+		if not chat_active:
+			print('{RED}[[[ЧАТ ЗАКРЫТ]]]{RESETCL}'.format(**colors))
+			break
 
 		while True:
 			try:
@@ -195,6 +216,11 @@ wss_addr = 'wss://meduza.io/pond/socket/websocket?token=no_token&vsn=1.0.0'
 ws = websocket.WebSocket()
 ws.settimeout(5.0)
 ws.connect(wss_addr)
+if argv[1:]:
+	url = argv[1]
+	topic_addr = url[url.index('meduza.io/')+10:]
+	topic_monitoring(topic_addr)
+	close_app()
 try:
 	while True:
 		topic_addr = get_topic_addr()
@@ -204,8 +230,6 @@ try:
 		print('\r' + '—'*30)
 		topic_close(topic_addr)
 except KeyboardInterrupt:
-	ws.close()
-	print('\rСоединение разорвано')
-	exit()
+	close_app()
 except:
 	raise
