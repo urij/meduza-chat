@@ -37,13 +37,9 @@ except:
 		'RESETAL'	: '',
 	}
 
-class increaser():
-     def __init__(self):
-         self.i = 1
-     def __call__(self):
-         self.i += 1
-         return self.i
-ref = increaser()
+def ref(j = [0]):
+	j[0] += 1
+	return j[0]
 
 def time_convert(unix_time):
 	localtime = time.localtime(unix_time)
@@ -109,6 +105,10 @@ def message_format(message, users):
 	writer_id = message['user_id']
 	writer_name = users[writer_id]['name']
 	writer_text	= message['message']
+
+	reply_to = message['reply_to_user_id']
+	writer_reply_to = (reply_to and '@'+users[reply_to]['name']) or ''
+
 	# id 60081 — Meduza Bot
 	writer_is_admin = users[writer_id]['admin'] or writer_id == '60081'
 	if message['status']:
@@ -116,11 +116,12 @@ def message_format(message, users):
 	else:
 		writer_time = '[{}]'.format(
 			time_convert(message['inserted_at']))
-	return '{GREEN}{BOLD}{0:<9}{RESETCL}{1}{2:<20}{3}{RESETAL}: {4}'.format(
+	return '{GREEN}{BOLD}{0:<9}{RESETCL}{1}{2:<20}{3}{RESETAL}: {BOLD}{4}{RESETAL} {5}'.format(
 		writer_time,
 		(writer_is_admin and colors['RED']) or '',
 		writer_name,
 		(writer_is_admin and colors['RESETCL']) or '',
+		writer_reply_to,
 		writer_text,
 		**colors
 		)
@@ -163,7 +164,7 @@ def topic_monitoring(topic_addr):
 	chat_title = response['chats'][chat_id]['title']
 	chat_second_title = response['chats'][chat_id]['second_title']
 
-	print('Чат #{}: {}\n{GRAY}{}{RESETCL}'.format(
+	print('Чат #{}: {BOLD}{}{RESETAL}\n{}'.format(
 		chat_id,
 		chat_title,
 		chat_second_title or '',
