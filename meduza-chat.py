@@ -116,14 +116,12 @@ def message_format(message, users):
 	else:
 		writer_time = '[{}]'.format(
 			time_convert(message['inserted_at']))
-	return '{GREEN}{BOLD}{time:<9}{RESETCL}{adm_l}{name:<20}{adm_r}{RESETAL}: {text}'.format(
-		**{
-			'name': writer_name,
-			'time': writer_time,
-			'text': writer_text,
-			'adm_l': (writer_is_admin and colors['RED']) or '',
-			'adm_r': (writer_is_admin and colors['RESETCL']) or '',
-		},
+	return '{GREEN}{BOLD}{0:<9}{RESETCL}{1}{2:<20}{3}{RESETAL}: {4}'.format(
+		writer_time,
+		(writer_is_admin and colors['RED']) or '',
+		writer_name,
+		(writer_is_admin and colors['RESETCL']) or '',
+		writer_text,
 		**colors
 		)
 # Разорвать соединение с сервером, вывести сообщение и выйти из приложения
@@ -168,7 +166,7 @@ def topic_monitoring(topic_addr):
 	print('Чат #{}: {}\n{GRAY}{}{RESETCL}'.format(
 		chat_id,
 		chat_title,
-		chat_second_title,
+		chat_second_title or '',
 		**colors
 		))
 

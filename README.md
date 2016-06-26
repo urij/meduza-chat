@@ -52,6 +52,6 @@ python3 meduza-chat.py https://meduza.io/feature/2016/06/24/strana-podozrevaemyh
 
 Будьте готовы к тому, что приложение содержит ошибки, и различные недоработки.
 
-Работоспособность протестирована на Linux и macOS.
+Работоспособность протестирована на Linux и macOS, Python версии ≥3.4.
 
 ![Демонстрация](media/show.gif)
