@@ -159,8 +159,11 @@ def topic_close(topic_addr = 'lobby'):
 def topic_monitoring(topic_addr):
 	heart_time = time.time()
 	r = get_topic(topic_addr)
+	if r['payload']['status'] == 'error':
+		print('{RED}[[[ЧАТ НЕ СУЩЕСТВУЕТ или ССЫЛКА НЕ ВЕРНА]]]{RESETCL}'.format(**colors))
+		return
 	response = r['payload']['response']
-	chat_id = response['chats_ids'][0]
+	chat_id = str(response['chat_id'])
 	chat_title = response['chats'][chat_id]['title']
 	chat_second_title = response['chats'][chat_id]['second_title']
 
@@ -170,6 +173,10 @@ def topic_monitoring(topic_addr):
 		chat_second_title or '',
 		**colors
 		))
+
+	if response['chats'][chat_id]['messages_count'] == 0:
+		print('{RED}[[[ЧАТ НЕ СОДЕРЖИТ СООБЩЕНИЙ]]]{RESETCL}'.format(**colors))
+		return
 
 	is_monitoring = True
 	while is_monitoring:
