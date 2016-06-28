@@ -11,35 +11,48 @@ except:
 	''')
 	exit()
 
-try:
-	import colorama
-	colors = {
-		'GREEN'		: colorama.Fore.GREEN,
-		'GRAY'		: colorama.Fore.LIGHTBLACK_EX,
-		'PURPLE'	: colorama.Fore.MAGENTA,
-		'RED'		: colorama.Fore.LIGHTRED_EX,
-		'BOLD'		: colorama.Style.BRIGHT,
-		'RESETCL'	: colorama.Fore.RESET,
-		'RESETAL'	: colorama.Style.RESET_ALL,
-	}
-except:
-	print('''
+colors = {
+	'GREEN'		: '',
+	'GRAY'		: '',
+	'PURPLE'	: '',
+	'RED'		: '',
+	'BOLD'		: '',
+	'RESETCL'	: '',
+	'RESETAL'	: '',
+}
+
+def associate_colors():
+	try:
+		import colorama
+		colors['GREEN']		= colorama.Fore.GREEN
+		colors['GRAY']		= colorama.Fore.LIGHTBLACK_EX
+		colors['PURPLE']	= colorama.Fore.MAGENTA
+		colors['RED']		= colorama.Fore.LIGHTRED_EX
+		colors['BOLD']		= colorama.Style.BRIGHT
+		colors['RESETCL']	= colorama.Fore.RESET
+		colors['RESETAL']	= colorama.Style.RESET_ALL
+	except:
+		print('''
 	Цветной вывод отключён. Необходима библиотека colorama.
 	Установить её можно с помощью pip.
-	''')
-	colors = {
-		'GREEN'		: '',
-		'GRAY'		: '',
-		'PURPLE'	: '',
-		'RED'		: '',
-		'BOLD'		: '',
-		'RESETCL'	: '',
-		'RESETAL'	: '',
-	}
+	Для принудительного запуска без цветов используйте параметр --no-colors
+		''')
 
 def ref(j = [0]):
 	j[0] += 1
 	return j[0]
+
+def help():
+	print('''
+Консольная читалка чатов с https://meduza.io
+Для обычного запуска и чтения последних чатов параметры не требуются.
+
+Для чтения определённого чата необходимо указать полную ссылку на страницу новости, с которой связан чат.
+meduza-chat.py [ссылка на новость]
+
+      --no-colors       отключение цветного вывода
+  -h  --help            показать эту справку
+	''')
 
 def time_convert(unix_time):
 	localtime = time.localtime(unix_time)
@@ -194,10 +207,14 @@ def topic_monitoring(topic_addr):
 		for i in ids:
 			message = messages[i]
 			print(message_format(message, users))
-		chat_active = response['chats'][chat_id]['active']
-		if not chat_active:
-			print('{RED}[[[ЧАТ ЗАКРЫТ]]]{RESETCL}'.format(**colors))
-			break
+		try:
+			chat_active = response['chats'][chat_id]['active']
+		except:
+			pass
+		else:
+			if not chat_active:
+				print('{RED}[[[ЧАТ ЗАКРЫТ]]]{RESETCL}'.format(**colors))
+				break
 
 		while True:
 			try:
@@ -230,11 +247,21 @@ wss_addr = 'wss://meduza.io/pond/socket/websocket?token=no_token&vsn=1.0.0'
 ws = websocket.WebSocket()
 ws.settimeout(5.0)
 ws.connect(wss_addr)
-if argv[1:]:
-	url = argv[1]
-	topic_addr = url[url.index('meduza.io/')+10:]
-	topic_monitoring(topic_addr)
-	close_app()
+args = argv[1:]
+if args:
+	if not args.count('--no-colors'):
+		associate_colors()
+	if args.count('-h') or args.count('--help'):
+		help()
+		exit()
+	elif args[0].count('meduza.io/'):
+		url = args[0]
+		topic_addr = url[url.index('meduza.io/')+10:]
+		topic_monitoring(topic_addr)
+		close_app()
+else:
+	associate_colors()
+
 try:
 	while True:
 		topic_addr = get_topic_addr()
