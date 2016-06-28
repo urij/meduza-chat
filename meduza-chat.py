@@ -62,10 +62,10 @@ def time_convert(unix_time):
 
 def get_topic_addr():
 	data = {
-		"topic":"topic:lobby",
-		"event":"phx_join",
-		"payload":{},
-		"ref":"{}".format(ref())
+		'topic':'topic:lobby',
+		'event':'phx_join',
+		'payload':{},
+		'ref':'{}'.format(ref())
 		}
 	data = json.dumps(data)
 	ws.send(data)
@@ -94,10 +94,10 @@ def get_topic_addr():
 
 def get_topic(topic_addr):
 	data = {
-		"topic":"topic:{}".format(topic_addr),
-		"event":"phx_join",
-		"payload":{},
-		"ref":"{}".format(ref())
+		'topic':'topic:{}'.format(topic_addr),
+		'event':'phx_join',
+		'payload':{},
+		'ref':'{}'.format(ref())
 		}
 	data = json.dumps(data)
 	ws.send(data)
@@ -148,19 +148,19 @@ def close_app():
 # По умолчанию закрывает список чатов (topic lobby)
 def topic_close(topic_addr = 'lobby'):
 	data = {
-		"topic":"topic:{}".format(topic_addr),
-		"event":"close",
-		"payload":{"reason":"close"},
-		"ref":"{}".format(ref())
+		'topic':'topic:{}'.format(topic_addr),
+		'event':'close',
+		'payload':{'reason':'close'},
+		'ref':'{}'.format(ref())
 		}
 	data = json.dumps(data)
 	ws.send(data)
 	ws.recv()
 	data = {
-		"topic":"topic:{}".format(topic_addr),
-		"event":"phx_leave",
-		"payload":{},
-		"ref":"{}".format(ref())
+		'topic':'topic:{}'.format(topic_addr),
+		'event':'phx_leave',
+		'payload':{},
+		'ref':'{}'.format(ref())
 		}
 	data = json.dumps(data)
 	ws.send(data)
@@ -200,10 +200,10 @@ def topic_monitoring(topic_addr):
 		try:
 			users = response['users']
 		except KeyError:
-			users = {
-				'id':"60081",
-				'name':"Meduza Bot"
-				}
+			users = {'60081': {
+				'id':'60081',
+				'name':'Meduza Bot'
+				}}
 		for i in ids:
 			message = messages[i]
 			print(message_format(message, users))
@@ -222,10 +222,10 @@ def topic_monitoring(topic_addr):
 				if (time.time() - heart_time) > 25:
 					heart_time = time.time()
 					data = {
-						"topic":"phoenix",
-						"event":"heartbeat",
-						"payload":{},
-						"ref":"{}".format(ref())
+						'topic':'phoenix',
+						'event':'heartbeat',
+						'payload':{},
+						'ref':'{}'.format(ref())
 						}
 					data = json.dumps(data)
 					ws.send(data)
