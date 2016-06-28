@@ -181,8 +181,16 @@ def topic_monitoring(topic_addr):
 	is_monitoring = True
 	while is_monitoring:
 		messages = response['messages']
-		users = response['users']
 		ids = response['messages_ids']
+		# В некоторых случаях, когда автор нового сообщения Meduza Bot
+		# в ответе отсутствует users с необходимыми данными
+		try:
+			users = response['users']
+		except KeyError:
+			users = {
+				'id':"60081",
+				'name':"Meduza Bot"
+				}
 		for i in ids:
 			message = messages[i]
 			print(message_format(message, users))
